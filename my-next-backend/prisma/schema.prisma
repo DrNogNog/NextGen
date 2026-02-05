@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model RestaurantGroup {
+  id        String   @id @default(cuid())
+  name      String
+  locations Location[]
+  createdAt DateTime @default(now())
+}
+
+model Location {
+  id           String   @id @default(cuid())
+  groupId      String
+  group        RestaurantGroup @relation(fields: [groupId], references: [id])
+  name         String
+  address      String
+  city         String
+  isActive     Boolean  @default(true)
+  tables       Table[]
+  parties      Party[]
+  createdAt    DateTime @default(now())
+}
+
+model Table {
+  id         String   @id @default(cuid())
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id])
+  tableId    String
+  capacity   Int
+  section    String?
+  isActive   Boolean  @default(true)
+  seatEvents SeatEvent[]
+  completeEvents CompleteEvent[]
+  createdAt  DateTime @default(now())
+}
+
+model Party {
+  id            String   @id @default(cuid())
+  locationId    String
+  location      Location @relation(fields: [locationId], references: [id])
+  name          String
+  partySize     Int
+  phone         String?
+  status        String   @default("waiting")
+  checkInTime   DateTime
+  seatEvents    SeatEvent[]
+  completeEvents CompleteEvent[]
+  statusLogs    StatusLog[]
+  createdAt     DateTime @default(now())
+}
+
+model SeatEvent {
+  id        String   @id @default(cuid())
+  partyId   String
+  party     Party    @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  tableId   String
+  table     Table    @relation(fields: [tableId], references: [id])
+  seatTime  DateTime
+  createdAt DateTime @default(now())
+}
+
+model CompleteEvent {
+  id           String   @id @default(cuid())
+  partyId      String
+  party        Party    @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  tableId      String
+  table        Table    @relation(fields: [tableId], references: [id])
+  completeTime DateTime
+  createdAt    DateTime @default(now())
+}
+
+model StatusLog {
+  id        String   @id @default(cuid())
+  partyId   String
+  party     Party    @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  status    String
+  timestamp DateTime @default(now())
+  createdAt DateTime @default(now())
+}
